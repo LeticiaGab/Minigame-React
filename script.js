@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import './App.css'; // Certifique-se de importar seus estilos
+import './assets/style.css';
 
 const TIME_CHALLENGE = 6; // segundos
 const QUANTITY_TIMES = 3; // vezes
@@ -12,29 +12,18 @@ const App = () => {
   const [currentPositionTyping, setCurrentPositionTyping] = useState(0);
   const [currentProgBar, setCurrentProgBar] = useState(100);
   const [timerId, setTimerId] = useState(null);
-  const [bestScores, setBestScores] = useState([]);
-
   const badResultRef = useRef(null);
   const goodResultRef = useRef(null);
   const containerChallengeRef = useRef(null);
   const progBarRef = useRef(null);
   const inputKeysRef = useRef([]);
 
-  const Wrong = new Audio('./sound/errou.mp3');
-  const Correct = new Audio('./sound/correto.mp3');
-  const Press = new Audio('./sound/pressionou.mp3');
+  const Wrong = new Audio('./assets/sound/errou.mp3');
+  const Press = new Audio('./assets/sound/pressionou.mp3');
+  const Correct = new Audio('./assets/sound/correto.mp3');
   Wrong.volume = 0.70;
   Correct.volume = 0.70;
   Press.volume = 0.40;
-
-  useEffect(() => {
-    const loadBestScores = () => {
-      const scores = JSON.parse(localStorage.getItem('bestScores')) || [];
-      setBestScores(scores);
-    };
-
-    loadBestScores();
-  }, []);
 
   useEffect(() => {
     const handleEventKey = (event) => {
@@ -56,21 +45,20 @@ const App = () => {
           setCurrentPositionTyping(currentPositionTyping + 1);
           if (newUserInput.length === 8) {
             clearInterval(timerId);
-            Correct.play();
             goodResultRef.current.style.display = 'flex';
             containerChallengeRef.current.style.display = 'none';
-            handleGameEnd();
+            Correct.play();
+            resetGame();
           }
         } else {
           Wrong.play();
-          handleGameEnd();
+          resetChallenge();
+          startNewSequence();
         }
       } else {
         if (isStart) {
           Wrong.play();
-          handleGameEnd();
-          goodResultRef.current.style.display = 'flex';
-          containerChallengeRef.current.style.display = 'none';
+          resetChallenge();
           startNewSequence();
         }
       }
@@ -158,29 +146,10 @@ const App = () => {
     setTimerId(id);
   };
 
-  const handleGameEnd = () => {
-    // Verifica se o usuário obteve uma pontuação alta e a adiciona ao ranking local
-    if (userInput.length === 8 && userInput.every((e, i) => e === currentSequence[i])) {
-      const newScore = { date: new Date().toLocaleString(), score: userInput.length };
-      const updatedScores = [...bestScores, newScore].sort((a, b) => b.score - a.score).slice(0, 5);
-      setBestScores(updatedScores);
-      localStorage.setItem('bestScores', JSON.stringify(updatedScores));
-    }
-  };
-
-  const handleRestart = () => {
-    setIsStart(false);
-    resetGame();
-    startNewSequence();
-  };
-
   return (
     <div className="app">
       <button onClick={startStopGame} className={isStart ? 'button-stop' : 'button-start'}>
         {isStart ? 'Stop' : 'Start'}
-      </button>
-      <button onClick={handleRestart} className="button-restart">
-        Restart
       </button>
       <div className="container_challenge" ref={containerChallengeRef}>
         <div className="container_challenge_title">💣 Digite a sequência correta do código</div>
@@ -201,15 +170,9 @@ const App = () => {
       <div className="good_result" ref={goodResultRef}>
         🟢 Código Certo.
       </div>
-      <div className="best_scores">
-        <h3>Best Scores</h3>
-        <ul>
-          {bestScores.map((score, index) => (
-            <li key={index}>
-              <strong>{score.date}</strong>: {score.score}
-            </li>
-          ))}
-        </ul>
+      <div className="links">
+        <a target="_blank" href="https://github.com/LeticiaGab"><img src="./img/github.png" alt="github link" /></a>
+        <a target="_blank" href="https://twitter.com/AuuroraRP"><img src="./img/twitter.png" alt="twitter link" /></a>
       </div>
     </div>
   );
